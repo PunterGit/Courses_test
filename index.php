@@ -1,14 +1,17 @@
 <?php
-	$connect = new mysqli("127.0.0.1:3306","root","","courses");
-	$connect->query("SET NAMES 'utf8' ");
-	$list = $connect->query("SELECT learn.id `id`, collab.fullname `fullName`, orgs.name `orgName`, cours.name `courseName`, learn.state_id `state` FROM learnings learn JOIN courses cours ON cours.id = learn.course_id JOIN collaborators collab ON collab.id = learn.person_id JOIN orgs ON orgs.id = collab.org_id") or die(mysqli_error());
-	$orgList = $connect->query("SELECT DISTINCT id, name FROM orgs") or die(mysqli_error());
-
-	//SELECT learn.id, collab.fullname, orgs.name, cours.name, learn.start_date, learn.finish_date FROM learnings learn JOIN courses cours ON cours.id = learn.course_id JOIN collaborators collab ON collab.id = learn.person_id JOIN orgs ON orgs.id = collab.org_id WHERE (learn.start_date > '2018-12-02') AND (learn.finish_date < '2018-12-05') ORDER BY `learn`.`id` ASC
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+try {
+    $connect = new mysqli("127.0.0.1:3306","root","","courses");
+    $connect->query("SET NAMES 'utf8' ");
+    $list = $connect->query("SELECT learn.id `id`, collab.fullname `fullName`, orgs.name `orgName`, cours.name `courseName`, learn.state_id `state` FROM learnings learn JOIN courses cours ON cours.id = learn.course_id JOIN collaborators collab ON collab.id = learn.person_id JOIN orgs ON orgs.id = collab.org_id");
+    $orgList = $connect->query("SELECT DISTINCT id, name FROM orgs");
+} catch (Exception $e) {
+    $er = $e->getMessage();
+}
 ?>
 <!DOCTYPE html>
-<html>
-<head lang="ru">
+<html lang="ru">
+<head>
 	<title>Курсы</title>
 	<meta charset="utf-8">
     <link type="text/css" rel="stylesheet" href="/css/bootstrap.min.css">
@@ -40,27 +43,31 @@
 		</div>
 	</div>
 	<div class="container">
+        <form>
 		<div class="row">
 			<div class="col-4">
-				<select class="form-control" name="org">
+				<select class="form-control" name="org" required>
 				<?php
+                if (!isset($er)){
                     while($row = $orgList->fetch_assoc())
                     {
                         echo "<option value=\"$row[id]\">$row[name]</option>";
                     }
+                }
 				?>
 				</select>
 			</div>
 			<div class="col-3">
-				<input class="form-control" type="date" name="date_start">
+				<input class="form-control" type="date" name="date_start" required>
 			</div>
 			<div class="col-3">
-				<input class="form-control" type="date" name="date_finish">
+				<input class="form-control" type="date" name="date_finish" required>
 			</div>
 			<div class="col-2">
-				<button class="btn btn-dark">Показать</button>
+				<button type="button" class="btn btn-dark">Показать</button>
 			</div>
 		</div>
+        </form>
 	</div>
 	<div class="container main">
 		<div class="row">
@@ -70,6 +77,9 @@
 			<div class="col-2"><b>Статус завершения</b></div>
 		</div>
 		<?php
+        if (isset($er)){
+            echo "<div class=\"row\"><div class=\"col-12\">$er</div></div>";
+        }else{
 			while($row = $list->fetch_assoc())
 			{
 				echo "<div class=\"row\">
@@ -82,6 +92,7 @@
 					echo "<div class=\"col-2\">Не завершен</div></div>";
 				}
 			}
+        }
 		?>
 	</div>
 </body>
